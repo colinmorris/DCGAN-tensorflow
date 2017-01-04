@@ -62,7 +62,8 @@ class DCGAN(object):
         if not self.y_dim:
             self.g_bn3 = batch_norm(name='g_bn3')
 
-        self.dataset_name = dataset_name.split('/')[-1] # hack
+        dataset_parts = dataset_name.split('/')
+        self.dataset_name = dataset_parts[-1] or dataset_parts[-2] # Allow optional trailing slash
         self.checkpoint_dir = checkpoint_dir
         self.build_model()
 
@@ -429,6 +430,7 @@ class DCGAN(object):
 
         model_dir = "%s_%s_%s" % (self.dataset_name, self.batch_size, self.output_size)
         checkpoint_dir = os.path.join(checkpoint_dir, model_dir)
+        print "Looking for checkpoint at {}".format(checkpoint_dir)
 
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
