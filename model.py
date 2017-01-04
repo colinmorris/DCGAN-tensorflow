@@ -62,7 +62,7 @@ class DCGAN(object):
         if not self.y_dim:
             self.g_bn3 = batch_norm(name='g_bn3')
 
-        self.dataset_name = dataset_name
+        self.dataset_name = dataset_name.split('/')[-1] # hack
         self.checkpoint_dir = checkpoint_dir
         self.build_model()
 
@@ -121,7 +121,8 @@ class DCGAN(object):
         if config.dataset == 'mnist':
             data_X, data_y = self.load_mnist()
         else:
-            data = glob(os.path.join("./data", config.dataset, "*.jpg"))
+            data = glob(os.path.join(config.dataset, "*.png"))
+            print "len(data) = {}".format(len(data))
         #np.random.shuffle(data)
 
         d_optim = tf.train.AdamOptimizer(config.learning_rate, beta1=config.beta1) \
@@ -152,7 +153,10 @@ class DCGAN(object):
             else:
                 sample_images = np.array(sample).astype(np.float32)
             
-        counter = 1
+	# Incremented with each batch. 
+	# - every 100 batches, save some samples
+	# - every 500 batches, save a checkpoint
+        counter = 1 
         start_time = time.time()
 
         if self.load(self.checkpoint_dir):
@@ -164,7 +168,7 @@ class DCGAN(object):
             if config.dataset == 'mnist':
                 batch_idxs = min(len(data_X), config.train_size) // config.batch_size
             else:            
-                data = glob(os.path.join("./data", config.dataset, "*.jpg"))
+                #data = glob(os.path.join("./data", config.dataset, "*.jpg"))
                 batch_idxs = min(len(data), config.train_size) // config.batch_size
 
             for idx in xrange(0, batch_idxs):
@@ -408,6 +412,7 @@ class DCGAN(object):
         return X/255.,y_vec
             
     def save(self, checkpoint_dir, step):
+        print "**** SAVING ***"
         model_name = "DCGAN.model"
         model_dir = "%s_%s_%s" % (self.dataset_name, self.batch_size, self.output_size)
         checkpoint_dir = os.path.join(checkpoint_dir, model_dir)
